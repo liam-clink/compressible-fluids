@@ -1,8 +1,10 @@
 fn main()
 {
-    let test_array = [1.; 10];
+    const ARR_LEN: usize = 10;
+    let initial = [1.; ARR_LEN];
+    let mut next = [0.; ARR_LEN];
 
-    ftcs_update(&test_array, square, 0.1);
+    ftcs_update(&initial, &mut next, square, 0.1);
 }
 
 fn square(x: f64) -> f64
@@ -10,22 +12,17 @@ fn square(x: f64) -> f64
     return x*x;
 }
 
-fn ftcs_update<const C: usize>(u: &[f64;C], f: fn(f64)->f64, l: f64)
+// TODO: When const generics is ready, u_new should be created in func and returned
+fn ftcs_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
 {
-    const grid_size: usize = &u.len();
-    let u_new = [0.; grid_size];
-/*
     // Periodic boundary
     u_new[0] = u[0] - l*0.5*(f(u[1]) - f(u[u.len()-1]));
     u_new[u.len()-1] = u[u.len()-1] - l*0.5*(f(u[0]) - f(u[u.len()-2]));
 
-    for i in 1 .. grid_size-1
+    for i in 1 .. u.len()-1
     {
         u_new[i] = u[i] - l*0.5*(f(u[i+1]) - f(u[i-1]));
     }
-
-    return u_new;
-    */
 }
 
 /*
