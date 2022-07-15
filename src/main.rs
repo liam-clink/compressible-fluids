@@ -25,7 +25,7 @@ fn ftcs_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64,
     }
 }
 
-fn LF_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
+fn lf_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
 {
     // Periodic boundary
     u_new[0] = 0.5*(u[1]-u[u.len()-1]) - l*0.5*(f(u[1]) - f(u[u.len()-1]));
@@ -37,7 +37,7 @@ fn LF_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l
     } 
 }
 
-fn LW_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
+fn lw_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
 {
     // Periodic boundary
     u_new[0] = u[0] - l*0.5*(f(u[1]) - f(u[u.len()-1])) 
@@ -76,12 +76,12 @@ fn run_tests()
     let tmax = 4.;
     let t: Vec<f64> = linspace::<f64>(0.,tmax,(x[x.len()-1]-x[0]/tmax*l) as usize).collect();
     let mut u = vec![0.; grid_size];
-
     // Should define a macro for this, or see if one exists
     // The python equivalent is u[np.abs(x)<1/3] = 1.
     u.iter_mut()
      .filter(|x: &&mut f64| x.abs()<1./3.)
      .for_each(|x: &mut f64| *x = 1.);
+    let u = u; // Revoke mutability
 
     // Case 3
     // plot for t=4 and 40
@@ -89,32 +89,33 @@ fn run_tests()
     let grid_size: usize = 600;
     let x: Vec<f64> = linspace::<f64>(-1.,1.,grid_size).collect();
     let t: Vec<f64> = linspace::<f64>(0.,tmax,(x[x.len()-1]-x[0]/tmax*l) as usize).collect();
-    let u = vec![0.; grid_size];
-
-    u.iter()
-     .filter(|x: &&f64| x.abs()<1./3.)
-     .map(|x: &f64| 1.);
+    let mut u = vec![0.; grid_size];
+    u.iter_mut()
+     .filter(|x: &&mut f64| x.abs()<1./3.)
+     .for_each(|x: &mut f64| *x = 1.);
+    let u = u; // Revoke mutability
 
     // Case 4
     let tmax = 0.6;
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1.,1.,grid_size).collect();
     let t: Vec<f64> = linspace::<f64>(0.,tmax,(x[x.len()-1]-x[0]/tmax*l) as usize).collect();
-    let u = vec![0.; grid_size];
-
-    u.iter()
-     .filter(|x: &&f64| x.abs()<1./3.)
-     .map(|x: &f64| 1.);
+    let mut u = vec![0.; grid_size];
+    u.iter_mut()
+     .filter(|x: &&mut f64| x.abs()<1./3.)
+     .for_each(|x: &mut f64| *x = 1.);
+    let u = u; // Revoke mutability
 
     // Case 5
     let tmax = 0.3;
     let x:Vec<f64> = linspace::<f64>(-1.,1.,grid_size).collect();
     let t:Vec<f64> = linspace::<f64>(0.,tmax,(x[x.len()-1]-x[0]/tmax*l) as usize).collect();
-    let u = vec![-1.; grid_size];
+    let mut u = vec![-1.; grid_size];
     
-    u.iter()
-     .filter(|x: &&f64| x.abs()<1./3.)
-     .map(|x: &f64| 1.);
+    u.iter_mut()
+     .filter(|x: &&mut f64| x.abs()<1./3.)
+     .for_each(|x: &mut f64| *x = 1.);
+    let u = u; // Revoke mutability
 }
 
 // Write to a file
