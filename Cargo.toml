@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-itertools-num = "0.1.3"
-pyo3 = "0.16.5"
+itertools-num = "*"
+
+[dependencies.pyo3]
+version = "*"
+features = ["auto-initialize"]

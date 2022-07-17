@@ -1,15 +1,6 @@
 fn main()
 {
-    const ARR_LEN: usize = 10;
-    let initial = [1.; ARR_LEN];
-    let mut next = [0.; ARR_LEN];
-
-    ftcs_update(&initial, &mut next, square, 0.1);
-}
-
-fn square(x: f64) -> f64
-{
-    return x*x;
+    run_tests();
 }
 
 // TODO: When const generics is ready, u_new should be created in func and returned
@@ -40,20 +31,20 @@ fn lf_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l
 fn lw_update<const C: usize>(u: &[f64;C], u_new: &mut[f64;C], f: fn(f64)->f64, l: f64)
 {
     // Periodic boundary
-    u_new[0] = u[0] - l*0.5*(f(u[1]) - f(u[u.len()-1])) 
+    let n = u.len(); // number of grid points
+    u_new[0] = u[0] - l*0.5*(f(u[1]) - f(u[n-1])) 
             + 0.5*l.powi(2)*((f(u[1])-f(u[0])).powi(2)/(u[1]-u[0]) -
-                        (f(u[0])-f(u[u.len()-1])).powi(2)/(u[0]-u[u.len()-1]));
-    u_new[u.len()-1] = u[u.len()-1] - l*0.5*(f(u[0]) - f(u[u.len()-2])) 
-            + 0.5*l.powi(2)*((f(u[0])-f(u[u.len()-1])).powi(2)/(u[0]-u[u.len()-1]) -
-                        (f(u[u.len()-1])-f(u[u.len()-2])).powi(2)/(u[u.len()-1]-u[u.len()-2]));
+                        (f(u[0])-f(u[n-1])).powi(2)/(u[0]-u[n-1]));
+    u_new[n-1] = u[n-1] - l*0.5*(f(u[0]) - f(u[n-2])) 
+            + 0.5*l.powi(2)*((f(u[0])-f(u[n-1])).powi(2)/(u[0]-u[n-1]) -
+                        (f(u[n-1])-f(u[n-2])).powi(2)/(u[n-1]-u[n-2]));
 
-    for i in 1 .. u.len()-1
+    for i in 1 .. n-1
     {
         u_new[i] = u[i] - l*0.5*(f(u[i+1]) - f(u[i-1])) 
             + 0.5*l.powi(2)*((f(u[i+1])-f(u[i])).powi(2)/(u[i+1]-u[i]) - 
                         (f(u[i])-f(u[i-1])).powi(2)/(u[i]-u[i-1]));
     }
-
 }
 
 

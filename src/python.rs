@@ -1,18 +1,35 @@
-use cpython::{Python, PyDict, PyResult};
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 
-fn main() {
-    let gil = Python::acquire_gil();
-    hello(gil.python()).unwrap();
-}
+fn main() -> PyResult<()> {
+    let arg1 = "arg1";
+    let arg2 = "arg2";
+    let arg3 = "arg3";
 
-fn hello(py: Python) -> PyResult<()> {
-    let sys = py.import("sys")?;
-    let version: String = sys.get(py, "version")?.extract(py)?;
+    Python::with_gil(|py| {
+        let fun: Py<PyAny> = PyModule::from_code(
+            py,
+            "def example(*args, **kwargs):
+                if args != ():
+                    print('called with args', args)
+                if kwargs != {}:
+                    print('called with kwargs', kwargs)
+                if args == () and kwargs == {}:
+                    print('called with no arguments')",
+            "",
+            "",
+        )?.getattr("example")?.into();
 
-    let locals = PyDict::new(py);
-    locals.set_item(py, "os", py.import("os")?)?;
-    let user: String = py.eval("os.getenv('USER') or os.getenv('USERNAME')", None, Some(&locals))?.extract(py)?;
+        // call object without empty arguments
+        fun.call0(py)?;
 
-    println!("Hello {}, I'm Python {}", user, version);
-    Ok(())
+        // call object with PyTuple
+        let args = PyTuple::new(py, &[arg1, arg2, arg3]);
+        fun.call1(py, args)?;
+
+        // pass arguments as rust tuple
+        let args = (arg1, arg2, arg3);
+        fun.call1(py, args)?;
+        Ok(())
+    })
 }
