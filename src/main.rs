@@ -8,11 +8,12 @@ type UpdateFunction = fn(&Vec<f64>, &mut Vec<f64>, fn(f64) -> f64, f64);
 
 fn ftcs_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 {
+    let n = u.len();
     // Periodic boundary
-    u_new[0] = u[0] - l * 0.5 * (f(u[1]) - f(u[u.len() - 1]));
-    u_new[u.len() - 1] = u[u.len() - 1] - l * 0.5 * (f(u[0]) - f(u[u.len() - 2]));
+    u_new[0] = u[0] - l * 0.5 * (f(u[1]) - f(u[n - 1]));
+    u_new[n - 1] = u[n - 1] - l * 0.5 * (f(u[0]) - f(u[n - 2]));
 
-    for i in 1..u.len() - 1
+    for i in 1..n - 1
     {
         u_new[i] = u[i] - l * 0.5 * (f(u[i + 1]) - f(u[i - 1]));
     }
@@ -20,11 +21,12 @@ fn ftcs_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 
 fn lf_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 {
+    let n = u.len();
     // Periodic boundary
-    u_new[0] = 0.5 * (u[1] - u[u.len() - 1]) - l * 0.5 * (f(u[1]) - f(u[u.len() - 1]));
-    u_new[u.len() - 1] = 0.5 * (u[0] - u[u.len() - 2]) - l * 0.5 * (f(u[0]) - f(u[u.len() - 2]));
+    u_new[0] = 0.5 * (u[1] - u[n - 1]) - l * 0.5 * (f(u[1]) - f(u[n - 1]));
+    u_new[n - 1] = 0.5 * (u[0] - u[n - 2]) - l * 0.5 * (f(u[0]) - f(u[n - 2]));
 
-    for i in 1..u.len() - 1
+    for i in 1..n - 1
     {
         u_new[i] = 0.5 * (u[i + 1] - u[i - 1]) - l * 0.5 * (f(u[i + 1]) - f(u[i - 1]));
     }
@@ -70,6 +72,7 @@ fn run_tests()
     }
 }
 
+
 fn _run_cases(update_func: UpdateFunction)
 {
     // Case 1
@@ -81,9 +84,7 @@ fn _run_cases(update_func: UpdateFunction)
         linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
     let mut u_initial = vec![0.; grid_size];
     // Initialize u to a sine wave initial condition
-    u_initial.iter_mut().for_each(|x: &mut f64| {
-        *x = (PI * *x).sin();
-    });
+    u_initial.iter_mut().zip(&x).for_each(|(u_ele, x_ele)| *u_ele = (PI * x_ele).sin());
     _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 2
@@ -96,8 +97,9 @@ fn _run_cases(update_func: UpdateFunction)
     // The python equivalent is u[np.abs(x)<1/3] = 1.
     u_initial
         .iter_mut()
-        .filter(|x: &&mut f64| x.abs() < 1. / 3.)
-        .for_each(|x: &mut f64| *x = 1.);
+        .zip(&x)
+        .filter(|(_u_ele, x_ele)| x_ele.abs() < 1. / 3.)
+        .for_each(|(u_ele, _x_ele)| *u_ele = 1.);
     _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 3
@@ -110,8 +112,9 @@ fn _run_cases(update_func: UpdateFunction)
     let mut u_initial = vec![0.; grid_size];
     u_initial
         .iter_mut()
-        .filter(|x: &&mut f64| x.abs() < 1. / 3.)
-        .for_each(|x: &mut f64| *x = 1.);
+        .zip(&x)
+        .filter(|(_u_ele, x_ele)| x_ele.abs() < 1. / 3.)
+        .for_each(|(u_ele, _x_ele)| *u_ele = 1.);
     _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 4
@@ -123,8 +126,9 @@ fn _run_cases(update_func: UpdateFunction)
     let mut u_initial = vec![0.; grid_size];
     u_initial
         .iter_mut()
-        .filter(|x: &&mut f64| x.abs() < 1. / 3.)
-        .for_each(|x: &mut f64| *x = 1.);
+        .zip(&x)
+        .filter(|(_u_ele, x_ele)| x_ele.abs() < 1. / 3.)
+        .for_each(|(u_ele, _x_ele)| *u_ele = 1.);
     _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 5
@@ -185,7 +189,6 @@ fn write_to_file(data_line: &Vec<f64>) -> Result<(), Box<dyn Error>>
         .iter()
         .for_each(|x| data_line_str.push(x.to_string()));
 
-    println!("{:?}", data_line_str);
     wtr.write_record(&data_line_str)?;
 
     wtr.flush()?;
