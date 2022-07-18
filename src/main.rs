@@ -155,11 +155,11 @@ fn _test_case(
     for _t in times
     {
         update_func(&u_old, &mut u_new, |x| x, lambda);
-        let _write_success = write_to_file(&u_new);
         std::mem::swap(&mut u_old, &mut u_new);
     }
 
     // Write data and then call basic_plot.py using Command::new()
+    let _write_success = write_to_file(&u_new);
 }
 
 use std::error::Error;
@@ -167,10 +167,17 @@ use std::error::Error;
 // Write to a file
 fn write_to_file(data_line: &Vec<f64>) -> Result<(), Box<dyn Error>>
 {
+    let file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open("test_data/data.tsv")
+        .unwrap();
+
     let mut wtr = csv::WriterBuilder::new()
         .delimiter(b'\t')
         .quote_style(csv::QuoteStyle::NonNumeric)
-        .from_path("data.tsv")?;
+        .from_writer(file);
 
     let mut data_line_str: Vec<String> = Vec::with_capacity(data_line.len());
 
