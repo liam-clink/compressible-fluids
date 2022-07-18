@@ -1,10 +1,12 @@
 fn main()
 {
     let test = vec![1.342, 12342.2, 324522.1231, 543.12343];
-    write_to_file(test);
+    let _write_success = write_to_file(&test);
 }
 
-fn ftcs_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) -> f64, l: f64)
+type UpdateFunction = fn(&Vec<f64>, &mut Vec<f64>, fn(f64) -> f64, f64);
+
+fn ftcs_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 {
     // Periodic boundary
     u_new[0] = u[0] - l * 0.5 * (f(u[1]) - f(u[u.len() - 1]));
@@ -16,7 +18,7 @@ fn ftcs_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) ->
     }
 }
 
-fn lf_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) -> f64, l: f64)
+fn lf_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 {
     // Periodic boundary
     u_new[0] = 0.5 * (u[1] - u[u.len() - 1]) - l * 0.5 * (f(u[1]) - f(u[u.len() - 1]));
@@ -28,7 +30,7 @@ fn lf_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) -> f
     }
 }
 
-fn lw_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) -> f64, l: f64)
+fn lw_update(u: &Vec<f64>, u_new: &mut Vec<f64>, f: fn(f64) -> f64, l: f64)
 {
     // Periodic boundary
     let n = u.len(); // number of grid points
@@ -57,88 +59,113 @@ fn lw_update<const C: usize>(u: &[f64; C], u_new: &mut [f64; C], f: fn(f64) -> f
 use itertools_num::linspace;
 use std::f64::consts::PI;
 
+#[test]
 fn run_tests()
 {
+    let functions_to_test = [ftcs_update, lf_update, lw_update];
+
+    for func in functions_to_test
+    {
+        _run_cases(func);
+    }
+}
+
+fn _run_cases(update_func: UpdateFunction)
+{
     // Case 1
-    let l = 0.8;
+    let lambda = 0.8;
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
     let tmax = 30.;
-    let t: Vec<f64> =
-        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * l) as usize).collect();
-    let mut u = vec![0.; grid_size];
-
+    let times: Vec<f64> =
+        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
+    let mut u_initial = vec![0.; grid_size];
     // Initialize u to a sine wave initial condition
-    u.iter_mut().for_each(|x: &mut f64| {
+    u_initial.iter_mut().for_each(|x: &mut f64| {
         *x = (PI * *x).sin();
     });
+    _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 2
     let tmax = 4.;
-    let t: Vec<f64> =
-        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * l) as usize).collect();
-    let mut u = vec![0.; grid_size];
+    let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
+    let times: Vec<f64> =
+        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
+    let mut u_initial = vec![0.; grid_size];
     // Should define a macro for this, or see if one exists
     // The python equivalent is u[np.abs(x)<1/3] = 1.
-    u.iter_mut()
+    u_initial
+        .iter_mut()
         .filter(|x: &&mut f64| x.abs() < 1. / 3.)
         .for_each(|x: &mut f64| *x = 1.);
-    let u = u; // Revoke mutability
+    _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 3
     // plot for t=4 and 40
     let tmax = 40.;
     let grid_size: usize = 600;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let t: Vec<f64> =
-        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * l) as usize).collect();
-    let mut u = vec![0.; grid_size];
-    u.iter_mut()
+    let times: Vec<f64> =
+        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
+    let mut u_initial = vec![0.; grid_size];
+    u_initial
+        .iter_mut()
         .filter(|x: &&mut f64| x.abs() < 1. / 3.)
         .for_each(|x: &mut f64| *x = 1.);
-    let u = u; // Revoke mutability
+    _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 4
     let tmax = 0.6;
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let t: Vec<f64> =
-        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * l) as usize).collect();
-    let mut u = vec![0.; grid_size];
-    u.iter_mut()
+    let times: Vec<f64> =
+        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
+    let mut u_initial = vec![0.; grid_size];
+    u_initial
+        .iter_mut()
         .filter(|x: &&mut f64| x.abs() < 1. / 3.)
         .for_each(|x: &mut f64| *x = 1.);
-    let u = u; // Revoke mutability
-}
+    _test_case(lambda, times, x, u_initial, update_func);
 
-fn test_case_5()
-{
+    // Case 5
     let grid_size: usize = 40;
-    let l = 0.8;
-    let tmax = 0.3;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
     let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * l) as usize).collect();
-    let mut u_old = vec![-1.; grid_size];
+        linspace::<f64>(0., tmax, (x[x.len() - 1] - x[0] / tmax * lambda) as usize).collect();
+    let u_initial = vec![-1.; grid_size];
+    _test_case(lambda, times, x, u_initial, update_func);
+}
 
+fn _test_case(
+    lambda: f64,
+    times: Vec<f64>,
+    x: Vec<f64>,
+    mut u_old: Vec<f64>,
+    update_func: UpdateFunction,
+)
+{
     u_old
         .iter_mut()
         .filter(|x: &&mut f64| x.abs() < 1. / 3.)
         .for_each(|x: &mut f64| *x = 1.);
 
-    let mut u_new = u_old.clone();
+    let mut u_new = vec![0.; u_old.len()];
 
     // Do loop with swapping
     for _t in times
     {
+        update_func(&u_old, &mut u_new, |x| x, lambda);
+        let _write_success = write_to_file(&u_new);
         std::mem::swap(&mut u_old, &mut u_new);
     }
+
+    // Write data and then call basic_plot.py using Command::new()
 }
 
 use std::error::Error;
 
 // Write to a file
-fn write_to_file(data_line: Vec<f64>) -> Result<(), Box<dyn Error>>
+fn write_to_file(data_line: &Vec<f64>) -> Result<(), Box<dyn Error>>
 {
     let mut wtr = csv::WriterBuilder::new()
         .delimiter(b'\t')
@@ -163,7 +190,7 @@ fn write_to_file(data_line: Vec<f64>) -> Result<(), Box<dyn Error>>
 fn test_write() -> Result<(), Box<dyn Error>>
 {
     let test: Vec<f64> = vec![1.423, 0.61324, 123.865];
-    write_to_file(test)?;
+    write_to_file(&test)?;
     // Could use assert_eq! and open file and check matching
     Ok(())
 }
