@@ -157,17 +157,14 @@ fn _test_case(
     let mut u_new = vec![0.; u_old.len()];
 
     // Do loop with swapping
-    /*
     for _t in times
     {
         update_func(&u_old, &mut u_new, |x| x, lambda);
         std::mem::swap(&mut u_old, &mut u_new);
     }
-    */
-    update_func(&u_old, &mut u_new, |x| x, lambda);
 
     // Write data and then call basic_plot.py using Command::new()
-    let _write_success = write_to_file(&u_old);
+    let _write_success = write_to_file(&u_new);
 }
 
 use std::error::Error;
