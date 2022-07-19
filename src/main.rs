@@ -84,23 +84,26 @@ fn _run_cases(update_func: UpdateFunction)
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1. - 2. / grid_size as f64, grid_size - 1).collect();
     let tmax = 30.;
-    let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (tmax / (x[x.len() - 1] - x[0]) / lambda) as usize).collect();
+    let times: Vec<f64> = linspace::<f64>(0., tmax, 750).collect();
+    println!("{:?}", times);
     let mut u_initial = vec![0.; grid_size - 1];
     // Initialize u to a sine wave initial condition
     u_initial
         .iter_mut()
         .zip(&x)
         .for_each(|(u_ele, x_ele)| *u_ele = (PI * x_ele).sin());
-    println!("{:?}", &u_initial);
     let _write_success = write_to_file(&u_initial);
     _test_case(lambda, times, x, u_initial, update_func);
 
     // Case 2
     let tmax = 4.;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (tmax / (x[x.len() - 1] - x[0]) / lambda) as usize).collect();
+    let times: Vec<f64> = linspace::<f64>(
+        0.,
+        tmax,
+        (tmax / (x[x.len() - 1] - x[0]) * grid_size as f64 / lambda) as usize,
+    )
+    .collect();
     let mut u_initial = vec![0.; grid_size];
     // Should define a macro for this, or see if one exists
     // The python equivalent is u[np.abs(x)<1/3] = 1.
@@ -117,8 +120,12 @@ fn _run_cases(update_func: UpdateFunction)
     let tmax = 40.;
     let grid_size: usize = 600;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (tmax / (x[x.len() - 1] - x[0]) / lambda) as usize).collect();
+    let times: Vec<f64> = linspace::<f64>(
+        0.,
+        tmax,
+        (tmax / (x[x.len() - 1] - x[0]) * grid_size as f64 / lambda) as usize,
+    )
+    .collect();
     let mut u_initial = vec![0.; grid_size];
     u_initial
         .iter_mut()
@@ -132,8 +139,12 @@ fn _run_cases(update_func: UpdateFunction)
     let tmax = 0.6;
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (tmax / (x[x.len() - 1] - x[0]) / lambda) as usize).collect();
+    let times: Vec<f64> = linspace::<f64>(
+        0.,
+        tmax,
+        (tmax / (x[x.len() - 1] - x[0]) * grid_size as f64 / lambda) as usize,
+    )
+    .collect();
     let mut u_initial = vec![0.; grid_size];
     u_initial
         .iter_mut()
@@ -146,8 +157,12 @@ fn _run_cases(update_func: UpdateFunction)
     // Case 5
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1., grid_size).collect();
-    let times: Vec<f64> =
-        linspace::<f64>(0., tmax, (tmax / (x[x.len() - 1] - x[0]) / lambda) as usize).collect();
+    let times: Vec<f64> = linspace::<f64>(
+        0.,
+        tmax,
+        (tmax / (x[x.len() - 1] - x[0]) * grid_size as f64 / lambda) as usize,
+    )
+    .collect();
     let mut u_initial = vec![-1.; grid_size];
     u_initial
         .iter_mut()
@@ -169,7 +184,7 @@ fn _test_case(
     let mut u_new = vec![0.; u_old.len()];
 
     // Do loop with swapping
-    for _t in 0..1
+    for _t in times
     {
         update_func(&u_old, &mut u_new, |x| x, lambda);
         std::mem::swap(&mut u_old, &mut u_new);
