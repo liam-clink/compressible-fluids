@@ -1,7 +1,12 @@
 # Must only have functions, this will not be run in full
 import matplotlib.pyplot as plt
-matplotlib.use('Qt5Agg')
+import numpy as np
 
-def basic_plot():
-    plt.plot([0.,1.], [0.5, 1.])
-    plt.show()
+file = open("test_data/data.tsv")
+
+data = []
+for i in range(15):
+    data.append(np.fromstring(file.readline(), sep="\t"))
+
+plt.plot(data[1])
+plt.show()
