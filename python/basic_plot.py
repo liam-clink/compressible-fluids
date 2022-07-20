@@ -8,6 +8,6 @@ data = []
 for i in range(15):
     data.append(np.fromstring(file.readline(), sep="\t"))
 
-plt.plot(data[2])
-plt.plot(data[3])
+plt.plot(data[0])
+plt.plot(data[1])
 plt.show()

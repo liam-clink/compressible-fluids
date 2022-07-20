@@ -77,6 +77,7 @@ fn run_tests()
     }
 }
 
+use math::round;
 fn _run_cases(update_func: UpdateFunction)
 {
     // Case 1
@@ -84,14 +85,19 @@ fn _run_cases(update_func: UpdateFunction)
     let grid_size: usize = 40;
     let x: Vec<f64> = linspace::<f64>(-1., 1. - 2. / grid_size as f64, grid_size - 1).collect();
     let tmax = 30.;
-    let times: Vec<f64> = linspace::<f64>(0., tmax, 750).collect();
-    println!("{:?}", times);
+    let times: Vec<f64> = linspace::<f64>(
+        0.,
+        tmax,
+        round::ceil(tmax / (2. / grid_size as f64 * lambda), 0) as usize,
+    )
+    .collect();
+    println!("{}", times.len());
     let mut u_initial = vec![0.; grid_size - 1];
     // Initialize u to a sine wave initial condition
     u_initial
         .iter_mut()
         .zip(&x)
-        .for_each(|(u_ele, x_ele)| *u_ele = (PI * x_ele).sin());
+        .for_each(|(u_ele, x_ele)| *u_ele = -(PI * x_ele).sin());
     let _write_success = write_to_file(&u_initial);
     _test_case(lambda, times, x, u_initial, update_func);
 
