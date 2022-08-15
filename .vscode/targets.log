@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Aug  5 19:04:40 2022
+# Make data base, printed on Fri Aug  5 22:30:13 2022
 
 # Variables
 
@@ -95,7 +95,7 @@ SNAP_REEXEC =
 # automatic
 @F = $(notdir $@)
 # environment
-VSCODE_PID = 12126
+VSCODE_PID = 7816
 # environment
 GENICAM_GENTL64_PATH = /opt/spinnaker/lib/flir-gentl
 # environment
@@ -105,7 +105,7 @@ XDG_SESSION_TYPE = x11
 # environment
 BAMF_DESKTOP_FILE_HINT = /var/lib/snapd/desktop/applications/code_code.desktop
 # environment
-SESSION_MANAGER = local/liam-MacBookPro:@/tmp/.ICE-unix/4282,unix/liam-MacBookPro:/tmp/.ICE-unix/4282
+SESSION_MANAGER = local/liam-MacBookPro:@/tmp/.ICE-unix/3597,unix/liam-MacBookPro:/tmp/.ICE-unix/3597
 # automatic
 *F = $(notdir $*)
 # environment
@@ -155,7 +155,7 @@ SNAP_USER_COMMON = /home/liam/snap/code/common
 # environment
 SNAP = /snap/code/102
 # environment
-INVOCATION_ID = e142e4731770424c8bb7d9a15e096a2e
+INVOCATION_ID = e657c6d1c7cd4b06bfb061145118de12
 # environment
 SNAP_REVISION = 102
 # environment
@@ -189,7 +189,7 @@ SNAP_ARCH = amd64
 # makefile
 .DEFAULT_GOAL := 
 # environment
-SYSTEMD_EXEC_PID = 4333
+SYSTEMD_EXEC_PID = 3622
 # environment
 DISPLAY = :0
 # environment
@@ -207,9 +207,9 @@ SNAP_DATA = /var/snap/code/102
 # environment
 SNAP_CONTEXT = bUpu70QRC6x7PXhnfkBBIBD_pSMgWBPAWkQwfxGXdsJNQMazUtIX
 # environment
-MANAGERPID = 4080
+MANAGERPID = 3351
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 12078
+GIO_LAUNCHED_DESKTOP_FILE_PID = 7765
 # environment
 _ = /snap/code/102/usr/share/code/code
 # environment
@@ -219,7 +219,7 @@ GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
 GDK_PIXBUF_MODULE_FILE = /home/liam/snap/code/common/.cache/gdk-pixbuf-loaders.cache
 # environment
-JOURNAL_STREAM = 8:40157
+JOURNAL_STREAM = 8:37207
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -280,7 +280,6 @@ SNAP_LIBRARY_PATH = /var/lib/snapd/lib/gl:/var/lib/snapd/lib/gl32:/var/lib/snapd
 # Implicit Rules
 
 # No implicit rules.
- 
 
 # Files
 
@@ -290,6 +289,7 @@ Makefile:
 #  File does not exist.
 #  File has been updated.
 #  Failed to be updated.
+ 
 
 # Not a target:
 .DEFAULT:
@@ -332,6 +332,6 @@ GNUmakefile:
 # strcache performance: lookups = 24 / hit rate = 12%
 # hash-table stats:
 # Load=21/8192=0%, Rehash=0, Collisions=0/24=0%
-# Finished Make data base on Fri Aug  5 19:04:40 2022
+# Finished Make data base on Fri Aug  5 22:30:13 2022
 
  

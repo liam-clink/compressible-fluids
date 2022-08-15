@@ -4,16 +4,17 @@
 #include <epoxy/glx.h>
 #include <GL/freeglut.h>
 #include <GLFW/glfw3.h> // GLFW is better than freeGLUT, but GLUT is oriented more towards quick/dirty like in tutorials
+#include <stdexcept>
 
 static const unsigned int screen_width = 160;
 static const unsigned int screen_height = 120;
 static const unsigned int pixelScale = 4;
 
-struct time
+struct timer
 {
     int fr1, fr2;
 };
-time T;
+timer T;
 
 struct keys
 {
@@ -78,9 +79,47 @@ void draw3D()
     pixel(screen_width>>1, (screen_height>>1)+tick, 0);
 }
 
+
+void draw_to_texture()
+{
+    // Create the framebuffer
+    GLuint FramebufferName = 0;
+    glGenFramebuffers(1, &FramebufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
+    // Create the texture
+    GLuint renderedTexture;
+    glGenTextures(1, &renderedTexture);
+    // Bind the texture, all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    // Give an empty image
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+    // Interpolation if scaling down
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // Interpolation if scaling up
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Attach the texture to the framebuffer, that is Set "renderedTexture" as our color attachment #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    // Set the list of draw buffers
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers);
+
+    // Check if the framebuffer was successfully created
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) 
+        throw std::runtime_error("Framebuffer not initialized");
+    
+    // Bind the framebuffer
+    glBindFramebuffer(GL_TEXTURE_2D, FramebufferName);
+    glViewport(0, 0, screen_width, screen_height);
+
+}
+
 void display()
 {
-    if (T.fr1-T.fr2>=500) // time in ms between frames
+    if (T.fr1-T.fr2>=500) // timer in ms between frames
     {
         glClear(GL_COLOR_BUFFER_BIT);
         movePlayer();
@@ -91,32 +130,33 @@ void display()
         glutReshapeWindow(screen_width<<2, screen_height<<2);
     }
 
-    T.fr1=glutGet(GLUT_ELAPSED_TIME); // Elapsed time in milliseconds
+    T.fr1=glutGet(GLUT_ELAPSED_TIME); // Elapsed timer in milliseconds
     glutPostRedisplay();
 }
 
 // Key press callbacks
-// What does chained == mean?
-void KeysDown(unsigned char key, int x, int y)
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key=='w'==1) {K.w =1;}
-    if (key=='s'==1) {K.s =1;}
-    if (key=='a'==1) {K.a =1;}
-    if (key=='d'==1) {K.d =1;}
-    if (key=='m'==1) {K.m =1;}
-    if (key==','==1) {K.sr=1;}
-    if (key=='.'==1) {K.sl=1;}
+    if (key==GLFW_KEY_W && action == GLFW_PRESS)      {K.w =1;}
+    if (key==GLFW_KEY_S && action == GLFW_PRESS)      {K.s =1;}
+    if (key==GLFW_KEY_A && action == GLFW_PRESS)      {K.a =1;}
+    if (key==GLFW_KEY_D && action == GLFW_PRESS)      {K.d =1;}
+    if (key==GLFW_KEY_M && action == GLFW_PRESS)      {K.m =1;}
+    if (key==GLFW_KEY_COMMA && action == GLFW_PRESS)  {K.sr=1;}
+    if (key==GLFW_KEY_PERIOD && action == GLFW_PRESS) {K.sl=1;}
+
+    if (key==GLFW_KEY_W && action == GLFW_RELEASE)      {K.w =0;}
+    if (key==GLFW_KEY_S && action == GLFW_RELEASE)      {K.s =0;}
+    if (key==GLFW_KEY_A && action == GLFW_RELEASE)      {K.a =0;}
+    if (key==GLFW_KEY_D && action == GLFW_RELEASE)      {K.d =0;}
+    if (key==GLFW_KEY_M && action == GLFW_RELEASE)      {K.m =0;}
+    if (key==GLFW_KEY_COMMA && action == GLFW_RELEASE)  {K.sr=0;}
+    if (key==GLFW_KEY_PERIOD && action == GLFW_RELEASE) {K.sl=0;}
 }
 
-void KeysUp(unsigned char key, int x, int y)
+static void error_callback(int err, const char* description)
 {
-    if (key=='w'==1) {K.w =0;}
-    if (key=='s'==1) {K.s =0;}
-    if (key=='a'==1) {K.a =0;}
-    if (key=='d'==1) {K.d =0;}
-    if (key=='m'==1) {K.m =0;}
-    if (key==','==1) {K.sr=0;}
-    if (key=='.'==1) {K.sl=0;}
+    fprintf(stderr, "Error: %s\n", description);
 }
 
 void init()
@@ -141,17 +181,28 @@ int main(int argcount, char* argvalues[])
         glfwTerminate();
         return -1;
     }
+    // Select the context belonging to window
+    glfwMakeContextCurrent(window);
 
     glClearColor(0.f, 60./255.f, 130./255.f, 0.f);
 
     
-    glutInit(&argcount, argvalues);
+
     gluOrtho2D(0, screen_width<<2, 0, screen_height<<2);
-    init();
     glutDisplayFunc(display);
-    glutKeyboardFunc(KeysDown);
-    glutKeyboardUpFunc(KeysUp);
-    glutMainLoop();
+
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetErrorCallback(error_callback);
+
+    // Main Loop
+    while (!glfwWindowShouldClose(window))
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glfwSwapBuffers(window);
+
+        glfwPollEvents(); // Trigger callbacks
+    }
 
     glfwTerminate();
     return 0;
