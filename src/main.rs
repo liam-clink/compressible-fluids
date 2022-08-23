@@ -8,7 +8,8 @@ fn main()
     let source = source;
     let mut pressure = solve_laplace(source, 0.1, 0.1, 1000);
 
-    io::write_to_file(&(pressure as Vec<f64>));
+    pressure.iter();
+    io::write_to_file(&pressure);
 }
 
 // Should use traits for dimensionality right?

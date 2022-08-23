@@ -1,9 +1,9 @@
 use std::error::Error;
 
 // Write to a file
-pub fn write_to_file<T>(data_line: T) -> Result<(), Box<dyn Error>>
+pub fn write_to_file<T>(data_line: &T) -> Result<(), Box<dyn Error>>
 where
-    T: std::iter::IntoIterator<Item = f64> + std::iter::ExactSizeIterator,
+    T: IntoIterator<Item = dyn std::string::ToString> + ExactSizeIterator,
 {
     let file = std::fs::OpenOptions::new()
         .write(true)
