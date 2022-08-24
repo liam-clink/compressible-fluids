@@ -1,9 +1,13 @@
 use std::error::Error;
 
 // Write to a file
+// This accepts types that can be turned into iterators that know their size,
+// and whose corresponding type can be converted to a string
 pub fn write_to_file<T, I>(data_line: T) -> Result<(), Box<dyn Error>>
 where
     T: IntoIterator<IntoIter = I>,
+    // The ExactSizeIterator could be just Iterator due to the use of collect() instead of for_each(),
+    // but if I add checks based on size, this will be required
     I: ExactSizeIterator,
     <I as Iterator>::Item: ToString,
 {

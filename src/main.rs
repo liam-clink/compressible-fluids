@@ -9,8 +9,6 @@ fn main()
     let pressure = solve_laplace(source, 0.1, 0.1, 1000);
 
     let _result = io::write_to_file(&pressure);
-
-    let test = pressure;
 }
 
 // Should use traits for dimensionality right?
