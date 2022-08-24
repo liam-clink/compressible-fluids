@@ -6,10 +6,11 @@ fn main()
     let mut source = ndarray::Array1::<f64>::zeros(100);
     source[50] = 1.;
     let source = source;
-    let mut pressure = solve_laplace(source, 0.1, 0.1, 1000);
+    let pressure = solve_laplace(source, 0.1, 0.1, 1000);
 
-    pressure.iter();
-    io::write_to_file(&pressure);
+    let _result = io::write_to_file(&pressure);
+
+    let test = pressure;
 }
 
 // Should use traits for dimensionality right?

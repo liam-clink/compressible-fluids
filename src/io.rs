@@ -1,9 +1,11 @@
 use std::error::Error;
 
 // Write to a file
-pub fn write_to_file<T>(data_line: &T) -> Result<(), Box<dyn Error>>
+pub fn write_to_file<T, I>(data_line: T) -> Result<(), Box<dyn Error>>
 where
-    T: IntoIterator<Item = dyn std::string::ToString> + ExactSizeIterator,
+    T: IntoIterator<IntoIter = I>,
+    I: ExactSizeIterator,
+    <I as Iterator>::Item: ToString,
 {
     let file = std::fs::OpenOptions::new()
         .write(true)
@@ -17,11 +19,8 @@ where
         .quote_style(csv::QuoteStyle::NonNumeric)
         .from_writer(file);
 
-    let mut data_line_str: Vec<String> = Vec::with_capacity(data_line.len());
-
-    data_line
-        .iter()
-        .for_each(|x| data_line_str.push(x.to_string()));
+    // into_iter() is used instead of iter() because iter() doesn't have a trait
+    let data_line_str: Vec<String> = data_line.into_iter().map(|x| x.to_string()).collect();
 
     wtr.write_record(&data_line_str)?;
 
@@ -29,12 +28,12 @@ where
     Ok(())
 }
 
-// User assertions to check for problems
+// Use assertions to check for problems
 #[test]
 fn test_write() -> Result<(), Box<dyn Error>>
 {
     let test: Vec<f64> = vec![1.423, 0.61324, 123.865];
-    write_to_file(&test)?;
+    write_to_file(test)?;
     // Could use assert_eq! and open file and check matching
     let _remove_success = std::fs::remove_file("test_data/data.tsv");
     Ok(())
