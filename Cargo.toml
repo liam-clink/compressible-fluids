@@ -10,3 +10,7 @@ itertools-num = "*"
 csv = "*"
 libmath = "*"
 ndarray = "*"
+<<<<<<< HEAD
+=======
+hdf5 = "*"
+>>>>>>> e6db99b8c7904d7d629d2cf6537da62db6d1cb8b
