@@ -11,6 +11,7 @@ where
     I: ExactSizeIterator,
     <I as Iterator>::Item: ToString,
 {
+    let _create_dir_success = std::fs::create_dir("test_data");
     let file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
@@ -34,8 +35,7 @@ where
 
 // Use assertions to check for problems
 #[test]
-fn test_write() -> Result<(), Box<dyn Error>>
-{
+fn test_write() -> Result<(), Box<dyn Error>> {
     let test: Vec<f64> = vec![1.423, 0.61324, 123.865];
     write_to_file(test)?;
     // Could use assert_eq! and open file and check matching
@@ -45,8 +45,7 @@ fn test_write() -> Result<(), Box<dyn Error>>
 
 // Read from a file
 use std::io::Read;
-pub fn read_from_file()
-{
+pub fn read_from_file() {
     let mut file = std::fs::File::open("data.txt").unwrap();
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
