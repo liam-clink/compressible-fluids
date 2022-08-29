@@ -34,14 +34,11 @@ where
 
 // Use assertions to check for problems
 #[test]
-fn test_write() -> Result<(), Box<dyn Error>>
+fn test_write()
 {
     let test_vec: Vec<f64> = vec![1.423, 0.61324, 123.865];
     let _remove_success = std::fs::remove_file("test_data/data.tsv");
-    write_to_file(test_vec)?;
-    // Could use assert_eq! and open file and check matching
-    let _remove_success = std::fs::remove_file("test_data/data.tsv");
-    Ok(())
+    write_to_file(test_vec).unwrap();
 }
 
 // Read from a file
@@ -58,27 +55,18 @@ where
     let result = contents
         .split('\t')
         .map(|x| {
-            let element = x.parse::<B>();
-            match element
-            {
-                Ok(valid_element) =>
-                {
-                    return valid_element;
-                }
-                Err(err) =>
-                {
-                    eprintln!("Element in input file is not valid: {err}");
-                }
-            }
+            let element = x.parse::<B>()?;
+            Ok(element)
         })
         .collect();
     result
 }
 
 #[test]
-fn test_read() -> Result<(), Box<dyn Error>>
+fn test_read()
 {
-    let test_vec: Vec<f64> = read_from_file("test_data/data.tsv");
-
-    Ok(())
+    let test_vec: Vec<f64> = read_from_file("test_data/data.tsv").unwrap();
+    assert_eq!(test_vec, vec![1.423, 0.61324, 123.865]);
+    // Could use assert_eq! and open file and check matching
+    let _remove_success = std::fs::remove_file("test_data/data.tsv");
 }
