@@ -13,17 +13,17 @@ pub struct Scalar
 // A vector is an element of a vector space over a field, which means
 // it has vector addition and scalar multiplication
 // Vector addition is associative, commutative, and has inverse and identity elements
-pub struct PhysicsVector
+pub struct Vector
 {
     raw_vector: Vec, // What about functions as vectors?
 }
 
-impl std::ops::Mul<PhysicsVector> for Scalar
+impl std::ops::Mul<Vector> for Scalar
 {
-    type Output = PhysicsVector;
-    fn mul(self, vector: &PhysicsVector) -> Self::Output
+    type Output = Vector;
+    fn mul(self, vector: &Vector) -> Self::Output
     {
-        PhysicsVector {
+        Vector {
             raw_vector: vector
                 .raw_vector
                 .value
@@ -34,7 +34,7 @@ impl std::ops::Mul<PhysicsVector> for Scalar
     }
 }
 
-impl std::ops::Mul<Scalar> for PhysicsVector
+impl std::ops::Mul<Scalar> for Vector
 {
     fn mul(&self, scalar: Scalar) -> Self
     {
