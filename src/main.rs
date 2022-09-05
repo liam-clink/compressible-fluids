@@ -6,8 +6,10 @@ fn main()
     let mut source = ndarray::Array1::<f64>::zeros(100);
     source[50] = 1.;
     let source = source;
-    let pressure = solve_laplace(source, 0.1, 0.1, 1000);
 
+    let pressure = solve_laplace(source, 0.1, 0.000001, 10000);
+    // let zip_iter = std::iter::zip(0..pressure.len(), &pressure);
+    // zip_iter.for_each(|(idx, val)| println!("{}: {:?}", idx, val));
     let _result = io::write_to_file(&pressure);
 }
 
@@ -34,13 +36,14 @@ fn solve_laplace(
         // Bulk handling
         for i in 1..n - 1
         {
-            delta = 0.5 * (f[i - 1] + f[i + 1]) - dx.powi(2) * laplacian[i] - f[i];
+            delta = 0.5 * (f[i - 1] + f[i + 1] - dx.powi(2) * laplacian[i]) - f[i];
             f[i] += delta;
-            error += delta;
+            error += delta.abs();
         }
 
         if error / (n as f64) < tolerance
         {
+            println!("Tolerance reached\n");
             break;
         }
     }
