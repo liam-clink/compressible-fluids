@@ -30,9 +30,9 @@ fn solve_laplace(
     {
         let mut error = 0.;
 
-        // Boundary handling (periodic boundary for now)
-        f[0] = 0.5 * (f[n - 1] + f[1]) - dx.powi(2) * laplacian[0];
-        f[n - 1] = 0.5 * (f[n - 2] + f[0]) - dx.powi(2) * laplacian[n - 1];
+        // Boundary handling (Dirichlet currently)
+        f[0] = 0.5 * (0. + f[1]) - dx.powi(2) * laplacian[0];
+        f[n - 1] = 0.5 * (f[n - 2] + 0.) - dx.powi(2) * laplacian[n - 1];
         // Bulk handling
         for i in 1..n - 1
         {
