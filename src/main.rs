@@ -3,14 +3,17 @@ mod io;
 
 fn main()
 {
-    let mut source = ndarray::Array1::<f64>::zeros(100);
-    source[50] = 1.;
+    let mut source = ndarray::Array2::<f64>::zeros((100, 100));
+    source[(50, 50)] = 1.;
     let source = source;
 
-    let pressure = source.solve_laplace(0.1, 0.000001, 10000);
+    let pressure = source.solve_laplace(0.1, 1.0e-6, 10000);
     // let zip_iter = std::iter::zip(0..pressure.len(), &pressure);
     // zip_iter.for_each(|(idx, val)| println!("{}: {:?}", idx, val));
-    let _result = io::write_to_file(&pressure);
+    for row in pressure.axis_iter(ndarray::Axis(0))
+    {
+        let _result = io::write_to_file(row);
+    }
 }
 
 pub trait SolveLaplace
@@ -23,17 +26,18 @@ impl SolveLaplace for ndarray::Array1<f64>
 {
     fn solve_laplace(&self, dx: f64, tolerance: f64, tries: u64) -> ndarray::Array1<f64>
     {
-        let n = self.len();
+        let n = self.shape()[0];
         let mut f = ndarray::Array1::<f64>::zeros(n);
         let mut delta: f64;
 
-        for _j in 0..tries
+        // Boundary handling (Dirichlet currently)
+        f[0] = 1.;
+        f[n - 1] = 0.;
+
+        for _try in 0..tries
         {
             let mut error = 0.;
 
-            // Boundary handling (Dirichlet currently)
-            f[0] = 0.5 * (0. + f[1]) - dx.powi(2) * self[0];
-            f[n - 1] = 0.5 * (f[n - 2] + 0.) - dx.powi(2) * self[n - 1];
             // Bulk handling
             for i in 1..n - 1
             {
@@ -52,6 +56,57 @@ impl SolveLaplace for ndarray::Array1<f64>
         return f;
     }
 }
+
+impl SolveLaplace for ndarray::Array2<f64>
+{
+    fn solve_laplace(&self, dx: f64, tolerance: f64, tries: u64) -> Self
+    {
+        let xn = self.shape()[0];
+        let yn = self.shape()[1];
+        let mut f = ndarray::Array2::<f64>::zeros((xn, yn));
+        let mut delta: f64;
+
+        // Boundary handling (Dirichlet currently)
+        for i in 0..xn
+        {
+            f[(i, 0)] = 1. - ((i as f64) / (xn as f64));
+            f[(i, yn - 1)] = 0. + ((i as f64) / (xn as f64));
+        }
+        for j in 0..yn
+        {
+            f[(0, j)] = 1. - ((j as f64) / (yn as f64));
+            f[(xn - 1, j)] = 0. + ((j as f64) / (yn as f64));
+        }
+
+        for _try in 0..tries
+        {
+            let mut error = 0.;
+
+            // Bulk handling
+            for i in 1..xn - 1
+            {
+                for j in 1..yn - 1
+                {
+                    delta = 0.25
+                        * (f[(i + 1, j)] + f[(i - 1, j)] + f[(i, j + 1)] + f[(i, j - 1)]
+                            - dx.powi(2) * self[(i, j)])
+                        - f[(i, j)];
+                    f[(i, j)] += delta;
+                    error += delta.abs();
+                }
+            }
+
+            if error / ((xn * yn) as f64) < tolerance
+            {
+                println!("Tolerance reached\n");
+                break;
+            }
+        }
+
+        return f;
+    }
+}
+
 /*
 let grid_size = 100;
 let dx: f64 = 0.1;
