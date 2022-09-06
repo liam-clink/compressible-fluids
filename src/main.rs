@@ -1,8 +1,8 @@
 // Euler equation solving assuming periodic boundary in 1D
 mod io;
+mod physics;
 
-fn main()
-{
+fn main() {
     let mut source = ndarray::Array1::<f64>::zeros(100);
     source[50] = 1.;
     let source = source;
@@ -20,29 +20,25 @@ fn solve_laplace(
     dx: f64,
     tolerance: f64,
     tries: u64,
-) -> ndarray::Array1<f64>
-{
+) -> ndarray::Array1<f64> {
     let n = laplacian.len();
     let mut f = ndarray::Array1::<f64>::zeros(n);
     let mut delta: f64;
 
-    for _j in 0..tries
-    {
+    for _j in 0..tries {
         let mut error = 0.;
 
         // Boundary handling (periodic boundary for now)
         f[0] = 0.5 * (f[n - 1] + f[1]) - dx.powi(2) * laplacian[0];
         f[n - 1] = 0.5 * (f[n - 2] + f[0]) - dx.powi(2) * laplacian[n - 1];
         // Bulk handling
-        for i in 1..n - 1
-        {
+        for i in 1..n - 1 {
             delta = 0.5 * (f[i - 1] + f[i + 1] - dx.powi(2) * laplacian[i]) - f[i];
             f[i] += delta;
             error += delta.abs();
         }
 
-        if error / (n as f64) < tolerance
-        {
+        if error / (n as f64) < tolerance {
             println!("Tolerance reached\n");
             break;
         }

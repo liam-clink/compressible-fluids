@@ -1,3 +1,10 @@
+use std::fmt::Debug;
+use std::ops::Mul;
+
+// This allows us to consolidate a lot of repetitve contraints needed below
+pub trait Field: Debug + Clone + Copy {}
+impl<T: Debug + Clone + Copy> Field for T {}
+
 // Replace float with scalar (could be complex or whatever else counts as a scalar
 // Probably should be a trait?)
 // The requirement to be a scalar is to be part of a field
@@ -5,41 +12,57 @@
 // Multiplication and addition must have identities and inverses
 // Mul and Add must be commutative and associative
 // Mul distributive over Add
-pub struct Scalar
-{
-    value: Float,
+#[derive(Debug, Clone)]
+pub struct Scalar<T: Field> {
+    value: T,
 }
 
 // A vector is an element of a vector space over a field, which means
 // it has vector addition and scalar multiplication
 // Vector addition is associative, commutative, and has inverse and identity elements
-pub struct Vector
-{
-    raw_vector: Vec, // What about functions as vectors?
+#[derive(Debug, Clone)]
+pub struct Vector<const SIZE: usize, T: Field> {
+    raw_vector: [T; SIZE], // What about functions as vectors?
 }
 
-impl std::ops::Mul<Vector> for Scalar
+// Scalar multiplication
+impl<const SIZE: usize, T: Field> std::ops::Mul<Vector<SIZE, T>> for Scalar<T>
+where
+    T: Mul<Output = T>,
 {
-    type Output = Vector;
-    fn mul(self, vector: &Vector) -> Self::Output
-    {
+    type Output = Vector<SIZE, T>;
+    fn mul(self, vector: Vector<SIZE, T>) -> Self::Output {
+        let result = vector
+            .raw_vector
+            .to_vec()
+            .iter()
+            .map(|v| *v * self.value)
+            .collect::<Vec<T>>();
         Vector {
-            raw_vector: vector
-                .raw_vector
-                .value
-                .iter()
-                .map(|v| v * self.value)
-                .collect(),
+            raw_vector: result
+                .try_into()
+                .unwrap_or_else(|v: Vec<T>| panic!("Could not convert {:?} to array", v)),
         }
     }
 }
 
-impl std::ops::Mul<Scalar> for Vector
+// Scalar multiplication again, but such that order doesn't matter
+impl<const SIZE: usize, T: Field> std::ops::Mul<Scalar<T>> for Vector<SIZE, T>
+where
+    T: Mul<Output = T>,
 {
-    fn mul(&self, scalar: Scalar) -> Self
-    {
-        Self {
-            raw_vector: self.value.iter().map(|v| v * rhs.value).collect(),
+    type Output = Vector<SIZE, T>;
+    fn mul(self, scalar: Scalar<T>) -> Self {
+        let result = self
+            .raw_vector
+            .to_vec()
+            .iter()
+            .map(|v| *v * scalar.value)
+            .collect::<Vec<T>>();
+        Vector {
+            raw_vector: result
+                .try_into()
+                .unwrap_or_else(|v: Vec<T>| panic!("Could not convert {:?} to array", v)),
         }
     }
 }
@@ -49,22 +72,28 @@ impl std::ops::Mul<Scalar> for Vector
 // Vector fields
 
 // Functions as vectors (composition of functions)
-fn quadratic(x: Scalar)
+fn quadratic<T: Field>(x: Scalar<T>) -> T
+where
+    T: Mul<Output = T>,
 {
     x.value * x.value
 }
-fn cubic(x: Float)
+
+fn cubic<T: Field>(x: Scalar<T>) -> T
+where
+    T: Mul<Output = T>,
 {
     x.value * x.value * x.value
 }
 
-pub trait InnerProductVector<Rhs = Self>
+pub trait InnerProductVector<T: Field, Rhs = Self>
+where
+    T: Mul<Output = T>,
 {
-    fn dot(&self, rhs: &Rhs) -> Float;
-    fn norm(&self) -> Float;
+    fn dot(&self, rhs: &Rhs) -> T;
+    fn norm(&self) -> T;
 }
 
-pub trait CrossableVector<Rhs = Self>
-{
+pub trait CrossableVector<Rhs = Self> {
     fn cross(&self, rhs: &Rhs) -> Self;
 }
