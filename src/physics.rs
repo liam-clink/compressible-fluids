@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::ops::Mul;
 
 // This allows us to consolidate a lot of repetitve contraints needed below
 pub trait Field: Debug + Clone + Copy {}
@@ -13,7 +12,8 @@ impl<T: Debug + Clone + Copy> Field for T {}
 // Mul and Add must be commutative and associative
 // Mul distributive over Add
 #[derive(Debug, Clone)]
-pub struct Scalar<T: Field> {
+pub struct Scalar<T: Field>
+{
     value: T,
 }
 
@@ -21,17 +21,19 @@ pub struct Scalar<T: Field> {
 // it has vector addition and scalar multiplication
 // Vector addition is associative, commutative, and has inverse and identity elements
 #[derive(Debug, Clone)]
-pub struct Vector<const SIZE: usize, T: Field> {
+pub struct Vector<const SIZE: usize, T: Field>
+{
     raw_vector: [T; SIZE], // What about functions as vectors?
 }
 
 // Scalar multiplication
 impl<const SIZE: usize, T: Field> std::ops::Mul<Vector<SIZE, T>> for Scalar<T>
 where
-    T: Mul<Output = T>,
+    T: std::ops::Mul<Output = T>,
 {
     type Output = Vector<SIZE, T>;
-    fn mul(self, vector: Vector<SIZE, T>) -> Self::Output {
+    fn mul(self, vector: Vector<SIZE, T>) -> Self::Output
+    {
         let result = vector
             .raw_vector
             .to_vec()
@@ -49,10 +51,11 @@ where
 // Scalar multiplication again, but such that order doesn't matter
 impl<const SIZE: usize, T: Field> std::ops::Mul<Scalar<T>> for Vector<SIZE, T>
 where
-    T: Mul<Output = T>,
+    T: std::ops::Mul<Output = T>,
 {
     type Output = Vector<SIZE, T>;
-    fn mul(self, scalar: Scalar<T>) -> Self {
+    fn mul(self, scalar: Scalar<T>) -> Self
+    {
         let result = self
             .raw_vector
             .to_vec()
@@ -74,26 +77,27 @@ where
 // Functions as vectors (composition of functions)
 fn quadratic<T: Field>(x: Scalar<T>) -> T
 where
-    T: Mul<Output = T>,
+    T: std::ops::Mul<Output = T>,
 {
     x.value * x.value
 }
 
 fn cubic<T: Field>(x: Scalar<T>) -> T
 where
-    T: Mul<Output = T>,
+    T: std::ops::Mul<Output = T>,
 {
     x.value * x.value * x.value
 }
 
 pub trait InnerProductVector<T: Field, Rhs = Self>
 where
-    T: Mul<Output = T>,
+    T: std::ops::Mul<Output = T>,
 {
     fn dot(&self, rhs: &Rhs) -> T;
     fn norm(&self) -> T;
 }
 
-pub trait CrossableVector<Rhs = Self> {
+pub trait CrossableVector<Rhs = Self>
+{
     fn cross(&self, rhs: &Rhs) -> Self;
 }
