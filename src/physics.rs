@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
 // This allows us to consolidate a lot of repetitve contraints needed below
-pub trait Field: Debug + Clone + Copy {}
-impl<T: Debug + Clone + Copy> Field for T {}
+// Consider how things with less structure like rings (hello matrix algebra!) could be specified
+pub trait Field: Debug + Clone + Copy + num_traits::One + num_traits::Zero {}
 
 // Replace float with scalar (could be complex or whatever else counts as a scalar
 // Probably should be a trait?)
