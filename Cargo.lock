@@ -28,6 +28,7 @@ dependencies = [
  "itertools-num",
  "libmath",
  "ndarray",
+ "num-traits",
 ]
 
 [[package]]

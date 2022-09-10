@@ -16,6 +16,17 @@ fn main()
     }
 }
 
+struct Grid<T, D>
+where
+    T: num_traits::float::Float,
+    D: Sized,
+{
+    values: ndarray::Array1<T>,
+    positions: ndarray::ArrayBase<T, D>,
+    boundary: ndarray::Array1<T>,
+    adjacency_matrix: ndarray::Array2<T>,
+}
+
 pub trait SolveLaplace
 {
     // Gives the solution to the laplace equation from the source this is applied to
