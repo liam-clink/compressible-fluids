@@ -3,8 +3,8 @@ mod io;
 
 fn main()
 {
-    let mut source = ndarray::Array2::<f64>::zeros((100, 100));
-    source[(50, 50)] = 1.;
+    let mut source = ndarray::Array2::<f64>::zeros((10, 20));
+    source[(5, 15)] = 1.;
     let source = source;
 
     let pressure = source.solve_laplace(0.1, 1.0e-6, 10000);

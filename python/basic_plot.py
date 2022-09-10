@@ -5,7 +5,9 @@ from mpl_toolkits import mplot3d
 
 
 data = np.loadtxt("test_data/data.tsv")
-X, Y = np.meshgrid(np.linspace(0, 1, data.shape[0]), np.linspace(0, 1, data.shape[0]))
+X, Y = np.meshgrid(
+    np.linspace(0, 1, data.shape[0]), np.linspace(0, 1, data.shape[1]), indexing="ij"
+)
 
 ax = plt.axes(projection="3d")
 ax.plot_surface(X, Y, data)
