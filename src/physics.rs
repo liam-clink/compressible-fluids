@@ -1,9 +1,8 @@
+use num_traits::{Num, One, Zero};
 use std::fmt::Debug;
-use std::ops::Mul;
 
 // This allows us to consolidate a lot of repetitve contraints needed below
-pub trait Field: Debug + Clone + Copy {}
-impl<T: Debug + Clone + Copy> Field for T {}
+pub trait Field: Debug + Clone + Copy + Zero + One + Num {}
 
 // Replace float with scalar (could be complex or whatever else counts as a scalar
 // Probably should be a trait?)
@@ -26,10 +25,7 @@ pub struct Vector<const SIZE: usize, T: Field> {
 }
 
 // Scalar multiplication
-impl<const SIZE: usize, T: Field> std::ops::Mul<Vector<SIZE, T>> for Scalar<T>
-where
-    T: Mul<Output = T>,
-{
+impl<const SIZE: usize, T: Field> std::ops::Mul<Vector<SIZE, T>> for Scalar<T> {
     type Output = Vector<SIZE, T>;
     fn mul(self, vector: Vector<SIZE, T>) -> Self::Output {
         let result = vector
@@ -47,10 +43,7 @@ where
 }
 
 // Scalar multiplication again, but such that order doesn't matter
-impl<const SIZE: usize, T: Field> std::ops::Mul<Scalar<T>> for Vector<SIZE, T>
-where
-    T: Mul<Output = T>,
-{
+impl<const SIZE: usize, T: Field> std::ops::Mul<Scalar<T>> for Vector<SIZE, T> {
     type Output = Vector<SIZE, T>;
     fn mul(self, scalar: Scalar<T>) -> Self {
         let result = self
@@ -72,24 +65,15 @@ where
 // Vector fields
 
 // Functions as vectors (composition of functions)
-fn quadratic<T: Field>(x: Scalar<T>) -> T
-where
-    T: Mul<Output = T>,
-{
+fn quadratic<T: Field>(x: Scalar<T>) -> T {
     x.value * x.value
 }
 
-fn cubic<T: Field>(x: Scalar<T>) -> T
-where
-    T: Mul<Output = T>,
-{
+fn cubic<T: Field>(x: Scalar<T>) -> T {
     x.value * x.value * x.value
 }
 
-pub trait InnerProductVector<T: Field, Rhs = Self>
-where
-    T: Mul<Output = T>,
-{
+pub trait InnerProductVector<T: Field, Rhs = Self> {
     fn dot(&self, rhs: &Rhs) -> T;
     fn norm(&self) -> T;
 }
