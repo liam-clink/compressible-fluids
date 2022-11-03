@@ -4,27 +4,35 @@ mod io;
 fn main()
 {
     let mut source = ndarray::Array2::<f64>::zeros((10, 20));
-    source[(5, 15)] = 1.;
+    source[(5, 15)] = 200.;
     let source = source;
 
     let pressure = source.solve_laplace(0.1, 1.0e-6, 10000);
     // let zip_iter = std::iter::zip(0..pressure.len(), &pressure);
     // zip_iter.for_each(|(idx, val)| println!("{}: {:?}", idx, val));
+    let _remove_success = std::fs::remove_file("test_data/data.tsv");
     for row in pressure.axis_iter(ndarray::Axis(0))
     {
         let _result = io::write_to_file(row);
     }
+
+    let n = 20;
+    let mut test_grid = Grid {
+        values: ndarray::Array1::<f64>::ones(n),
+        positions: ndarray::Array2::<f64>::zeros((n, 3)),
+        boundary: ndarray::Array1::<f64>::zeros(n),
+        adjacency_matrix: ndarray::Array2::<f64>::zeros((n, 3)),
+    };
 }
 
-struct Grid<T, D>
+struct Grid<D>
 where
-    T: num_traits::float::Float,
     D: Sized,
 {
-    values: ndarray::Array1<T>,
-    positions: ndarray::ArrayBase<T, D>,
-    boundary: ndarray::Array1<T>,
-    adjacency_matrix: ndarray::Array2<T>,
+    values: ndarray::Array1<f64>,
+    positions: ndarray::Array<f64, D>,
+    boundary: ndarray::Array1<f64>,
+    adjacency_matrix: ndarray::Array2<f64>,
 }
 
 pub trait SolveLaplace
@@ -35,7 +43,7 @@ pub trait SolveLaplace
 
 impl SolveLaplace for ndarray::Array1<f64>
 {
-    fn solve_laplace(&self, dx: f64, tolerance: f64, tries: u64) -> ndarray::Array1<f64>
+    fn solve_laplace(&self, dx: f64, tolerance: f64, tries: u64) -> Self
     {
         let n = self.shape()[0];
         let mut f = ndarray::Array1::<f64>::zeros(n);
