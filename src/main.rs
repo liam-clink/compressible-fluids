@@ -1,5 +1,6 @@
 // Euler equation solving assuming periodic boundary in 1D
 mod io;
+mod mesh;
 
 fn main()
 {
