@@ -18,7 +18,7 @@ fn main()
     }
 
     let n = 20;
-    let mut test_grid = Grid {
+    let _test_grid = Grid {
         values: ndarray::Array1::<f64>::ones(n),
         positions: ndarray::Array2::<f64>::zeros((n, 3)),
         boundary: ndarray::Array1::<f64>::zeros(n),

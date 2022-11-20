@@ -3,111 +3,210 @@
 // How to make sure that Face and Polyhedron are valid
 
 #[derive(Debug)]
-struct Mesh<'vertex: 'edge, 'edge: 'triangle, 'triangle, T>
+pub struct Mesh<T>
 {
-    vertices: std::vec::Vec<Vertex<T>>,
-    edges: std::vec::Vec<Edge<'vertex, T>>,
-    triangles: std::vec::Vec<Triangle<'vertex, 'edge, T>>,
-    tetrahedra: std::vec::Vec<Tetrahedron<'vertex, 'edge, 'triangle, T>>,
+    vertices: bimap::BiHashMap<uuid::Uuid, Vertex<T>>,
+    edges: bimap::BiHashMap<uuid::Uuid, Edge>,
+    triangles: bimap::BiHashMap<uuid::Uuid, Triangle>,
+    tetrahedra: bimap::BiHashMap<uuid::Uuid, Tetrahedron>,
 }
 
-#[derive(Debug, PartialEq)]
-struct Vertex<T>
+impl<T> Mesh<T>
 {
-    position: std::vec::Vec<T>,
-}
-
-impl<'a: 'b, 'b, T> Vertex<T>
-{
-    // Vertices can outlive an edge created with them, but not the reverse
-    pub fn join(&'a self, other_vertex: &'a Vertex<T>) -> Edge<'b, T>
+    pub fn new() -> Self
     {
-        Edge {
-            vertices: [self, other_vertex],
+        Mesh {
+            vertices: Default::default(),
+            edges: Default::default(),
+            triangles: Default::default(),
+            tetrahedra: Default::default(),
         }
     }
-}
 
-#[derive(Debug, PartialEq)]
-// Edge lives only as long as its vertices do
-struct Edge<'a, T>
-{
-    vertices: [&'a Vertex<T>; 2],
-}
-
-impl<'a, T> Edge<'a, T>
-{
-    pub fn new(vertex1: &'a Vertex<T>, vertex2: &'a Vertex<T>) -> Self
+    pub fn add_vertex(&mut self, vertex: Vertex<T>) -> uuid::Uuid
     {
-        Edge {
-            vertices: [vertex1, vertex2],
-        }
+        let id = uuid::Uuid::new_v4();
+        self.vertices.insert(id, vertex);
+        return id;
     }
-}
 
-#[derive(Debug, PartialEq)]
-struct Triangle<'a: 'b, 'b, T>
-{
-    edges: [&'b Edge<'a, T>; 3],
-}
+    pub fn join_vertices(&mut self, vertex1: uuid::Uuid, vertex2: uuid::Uuid)
+    {
+        let new_edge = Edge {
+            vertex_ids: [vertex1, vertex2],
+        };
+        self.edges.insert(uuid::Uuid::new_v4(), new_edge);
+    }
 
-impl<'a: 'b, 'b, T> Triangle<'a, 'b, T>
-{
-    pub fn from_vertices(
-        vertex1: &'a Vertex<T>,
-        vertex2: &'a Vertex<T>,
-        vertex3: &'a Vertex<T>,
-    ) -> Self
+    pub fn triangle_from_vertices(
+        &mut self,
+        vertex1: &Vertex<T>,
+        vertex2: &Vertex<T>,
+        vertex3: &Vertex<T>,
+    ) -> Triangle
+    {
+        let edge_ids = [
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4(),
+        ];
+
+        self.edges.insert(
+            edge_ids[0],
+            Edge {
+                vertex_ids: [
+                    *self.vertices.get_by_right(vertex1).unwrap(),
+                    *self.vertices.get_by_right(vertex2).unwrap(),
+                ],
+            },
+        );
+
+        self.edges.insert(
+            edge_ids[1],
+            Edge {
+                vertex_ids: [
+                    *self.vertices.get_by_right(vertex2).unwrap(),
+                    *self.vertices.get_by_right(vertex3).unwrap(),
+                ],
+            },
+        );
+
+        self.edges.insert(
+            edge_ids[2],
+            Edge {
+                vertex_ids: [
+                    *self.vertices.get_by_right(vertex3).unwrap(),
+                    *self.vertices.get_by_right(vertex1).unwrap(),
+                ],
+            },
+        );
+
+        self.triangle_from_edges(
+            self.edges.get_by_left(&edge_ids[0]).unwrap(),
+            self.edges.get_by_left(&edge_ids[0]).unwrap(),
+            self.edges.get_by_left(&edge_ids[0]).unwrap(),
+        )
+    }
+
+    pub fn triangle_from_edges(&self, edge1: &Edge, edge2: &Edge, edge3: &Edge) -> Triangle
     {
         Triangle {
             edges: [
-                &Edge {
-                    vertices: [vertex1, vertex2],
-                },
-                &Edge {
-                    vertices: [vertex2, vertex3],
-                },
-                &Edge {
-                    vertices: [vertex3, vertex1],
-                },
+                *self.edges.get_by_right(edge1).unwrap(),
+                *self.edges.get_by_right(edge2).unwrap(),
+                *self.edges.get_by_right(edge3).unwrap(),
             ],
-        }
-    }
-
-    pub fn from_edges(
-        edge1: &'b Edge<'a, T>,
-        edge2: &'b Edge<'a, T>,
-        edge3: &'b Edge<'a, T>,
-    ) -> Self
-    {
-        Triangle {
-            edges: [edge1, edge2, edge3],
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct Tetrahedron<'a: 'b, 'b: 'c, 'c, T>
+#[derive(Debug)]
+pub struct Vertex<T>
 {
-    faces: [&'c Triangle<'a, 'b, T>; 4],
+    position: std::vec::Vec<T>,
+}
+// TODO: perhaps make these 3 impls into a declarative macro, per Kevin's advice
+impl<T> PartialEq for Vertex<T>
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        &self == &other
+    }
+}
+impl<T> Eq for Vertex<T> {}
+
+impl<T> std::hash::Hash for Vertex<T>
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
+    {
+        let address = format!("{:p}", &self);
+        address.hash(state); // Hash the address instead of the contents
+    }
+}
+
+#[derive(Debug)]
+pub struct Edge
+{
+    vertex_ids: [uuid::Uuid; 2],
+}
+impl PartialEq for Edge
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        &self == &other
+    }
+}
+impl Eq for Edge {}
+
+impl std::hash::Hash for Edge
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
+    {
+        let address = format!("{:p}", &self);
+        address.hash(state); // Hash the address instead of the contents
+    }
+}
+
+#[derive(Debug)]
+pub struct Triangle
+{
+    edges: [uuid::Uuid; 3],
+}
+impl PartialEq for Triangle
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        &self == &other
+    }
+}
+impl Eq for Triangle {}
+
+impl std::hash::Hash for Triangle
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
+    {
+        let address = format!("{:p}", &self);
+        address.hash(state); // Hash the address instead of the contents
+    }
+}
+
+#[derive(Debug)]
+pub struct Tetrahedron
+{
+    faces: [uuid::Uuid; 4],
+}
+impl PartialEq for Tetrahedron
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        &self == &other
+    }
+}
+impl Eq for Tetrahedron {}
+
+impl std::hash::Hash for Tetrahedron
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
+    {
+        let address = format!("{:p}", &self);
+        address.hash(state); // Hash the address instead of the contents
+    }
 }
 
 #[test]
 fn check_join()
 {
-    let v1 = Vertex::<f64> {
+    let mut test_mesh = Mesh::new();
+
+    let v1_id = test_mesh.add_vertex(Vertex::<f64> {
         position: std::vec![0., 1.],
-    };
-    let v2 = Vertex::<f64> {
+    });
+    let v2_id = test_mesh.add_vertex(Vertex::<f64> {
         position: std::vec![2., 3.],
-    };
+    });
 
-    let test_edge1 = v1.join(&v2);
-    let test_edge2 = Edge::new(&v1, &v2);
+    test_mesh.join_vertices(v1_id, v2_id);
 
-    println!(
-        "Checking both ways of edge creation are the same {:?} {:?}",
-        &test_edge1, &test_edge2
-    );
-    assert_eq!(test_edge1, test_edge2);
+    println!("Checking mesh state {:?}", test_mesh);
+    //assert_eq!(test_edge1, test_edge2);
 }
