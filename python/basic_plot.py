@@ -1,8 +1,6 @@
 # Must only have functions, this will not be run in full
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits import mplot3d
-
 
 data = np.loadtxt("test_data/data.tsv")
 X, Y = np.meshgrid(

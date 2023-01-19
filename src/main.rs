@@ -1,3 +1,5 @@
+use mesh::WEVertex;
+
 // Euler equation solving assuming periodic boundary in 1D
 mod io;
 mod mesh;
@@ -17,23 +19,11 @@ fn main()
         let _result = io::write_to_file(row);
     }
 
-    let n = 20;
-    let _test_grid = Grid {
-        values: ndarray::Array1::<f64>::ones(n),
-        positions: ndarray::Array2::<f64>::zeros((n, 3)),
-        boundary: ndarray::Array1::<f64>::zeros(n),
-        adjacency_matrix: ndarray::Array2::<f64>::zeros((n, 3)),
-    };
-}
-
-struct Grid<D>
-where
-    D: Sized,
-{
-    values: ndarray::Array1<f64>,
-    positions: ndarray::Array<f64, D>,
-    boundary: ndarray::Array1<f64>,
-    adjacency_matrix: ndarray::Array2<f64>,
+    let mut test_mesh = mesh::WingedEdgeMesh::<f64>::new();
+    test_mesh.vertices.push(WEVertex {
+        data: 5.,
+        edges: [0; 3],
+    })
 }
 
 pub trait SolveLaplace

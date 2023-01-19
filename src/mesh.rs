@@ -3,6 +3,51 @@
 // How to make sure that Face and Polyhedron are valid
 
 #[derive(Debug)]
+pub struct WingedEdgeMesh<T>
+{
+    pub edges: std::vec::Vec<WingedEdge>,
+    pub vertices: std::vec::Vec<WEVertex<T>>,
+    pub triangles: std::vec::Vec<WETriangle>,
+}
+impl<T> WingedEdgeMesh<T>
+{
+    pub fn new() -> Self
+    {
+        WingedEdgeMesh {
+            vertices: Default::default(),
+            edges: Default::default(),
+            triangles: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct WingedEdge
+{
+    pub vertex_start: usize,
+    pub vertex_end: usize,
+    pub face_left: usize,
+    pub face_right: usize,
+    pub edge_start_cw: usize,
+    pub edge_start_ccw: usize,
+    pub edge_end_cw: usize,
+    pub edge_end_ccw: usize,
+}
+
+#[derive(Debug)]
+pub struct WEVertex<T>
+{
+    pub data: T,
+    pub edges: [usize; 3],
+}
+
+#[derive(Debug)]
+pub struct WETriangle
+{
+    edges: [usize; 3],
+}
+
+#[derive(Debug)]
 pub struct Mesh<T>
 {
     vertices: std::vec::Vec<Vertex<T>>,
@@ -38,7 +83,12 @@ impl<T> Mesh<T>
         self.edges.len() - 1
     }
 
-    pub fn triangle_from_vertices(&mut self, vertex1: usize, vertex2: usize, vertex3: usize)
+    pub fn triangle_from_vertices(
+        &mut self,
+        vertex1: usize,
+        vertex2: usize,
+        vertex3: usize,
+    ) -> usize
     {
         let new_edges = [
             self.edge_from_vertices(vertex1, vertex2),
@@ -49,6 +99,7 @@ impl<T> Mesh<T>
             vertices: [vertex1, vertex2, vertex3],
             edges: new_edges,
         });
+        self.triangles.len() - 1
     }
 }
 
