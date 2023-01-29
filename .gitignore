@@ -1,7 +1,6 @@
 /target
 *.exe
 *.tsv
-
 *.out
 
 .vscode

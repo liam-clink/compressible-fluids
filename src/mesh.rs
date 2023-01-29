@@ -3,12 +3,57 @@
 // How to make sure that Face and Polyhedron are valid
 
 #[derive(Debug)]
+pub struct WingedEdgeMesh<T>
+{
+    pub edges: std::vec::Vec<WingedEdge>,
+    pub vertices: std::vec::Vec<WEVertex<T>>,
+    pub triangles: std::vec::Vec<WETriangle>,
+}
+impl<T> WingedEdgeMesh<T>
+{
+    pub fn new() -> Self
+    {
+        WingedEdgeMesh {
+            vertices: Default::default(),
+            edges: Default::default(),
+            triangles: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct WingedEdge
+{
+    pub vertex_start: usize,
+    pub vertex_end: usize,
+    pub face_left: usize,
+    pub face_right: usize,
+    pub edge_start_cw: usize,
+    pub edge_start_ccw: usize,
+    pub edge_end_cw: usize,
+    pub edge_end_ccw: usize,
+}
+
+#[derive(Debug)]
+pub struct WEVertex<T>
+{
+    pub data: T,
+    pub edges: [usize; 3],
+}
+
+#[derive(Debug)]
+pub struct WETriangle
+{
+    edges: [usize; 3],
+}
+
+#[derive(Debug)]
 pub struct Mesh<T>
 {
-    vertices: bimap::BiHashMap<uuid::Uuid, Vertex<T>>,
-    edges: bimap::BiHashMap<uuid::Uuid, Edge>,
-    triangles: bimap::BiHashMap<uuid::Uuid, Triangle>,
-    tetrahedra: bimap::BiHashMap<uuid::Uuid, Tetrahedron>,
+    vertices: std::vec::Vec<Vertex<T>>,
+    edges: std::vec::Vec<Edge>,
+    triangles: std::vec::Vec<Triangle>,
+    tetrahedra: std::vec::Vec<Tetrahedron>,
 }
 
 impl<T> Mesh<T>
@@ -23,80 +68,38 @@ impl<T> Mesh<T>
         }
     }
 
-    pub fn add_vertex(&mut self, vertex: Vertex<T>) -> uuid::Uuid
+    pub fn add_vertex(&mut self, vertex: Vertex<T>) -> usize
     {
-        let id = uuid::Uuid::new_v4();
-        self.vertices.insert(id, vertex);
-        return id;
+        self.vertices.push(vertex);
+        self.vertices.len() - 1
     }
 
-    pub fn join_vertices(&mut self, vertex1: uuid::Uuid, vertex2: uuid::Uuid)
+    pub fn edge_from_vertices(&mut self, vertex1: usize, vertex2: usize) -> usize
     {
         let new_edge = Edge {
-            vertex_ids: [vertex1, vertex2],
+            vertices: [vertex1, vertex2],
         };
-        self.edges.insert(uuid::Uuid::new_v4(), new_edge);
+        self.edges.push(new_edge);
+        self.edges.len() - 1
     }
 
     pub fn triangle_from_vertices(
         &mut self,
-        vertex1: &Vertex<T>,
-        vertex2: &Vertex<T>,
-        vertex3: &Vertex<T>,
-    ) -> Triangle
+        vertex1: usize,
+        vertex2: usize,
+        vertex3: usize,
+    ) -> usize
     {
-        let edge_ids = [
-            uuid::Uuid::new_v4(),
-            uuid::Uuid::new_v4(),
-            uuid::Uuid::new_v4(),
+        let new_edges = [
+            self.edge_from_vertices(vertex1, vertex2),
+            self.edge_from_vertices(vertex2, vertex3),
+            self.edge_from_vertices(vertex3, vertex1),
         ];
-
-        self.edges.insert(
-            edge_ids[0],
-            Edge {
-                vertex_ids: [
-                    *self.vertices.get_by_right(vertex1).unwrap(),
-                    *self.vertices.get_by_right(vertex2).unwrap(),
-                ],
-            },
-        );
-
-        self.edges.insert(
-            edge_ids[1],
-            Edge {
-                vertex_ids: [
-                    *self.vertices.get_by_right(vertex2).unwrap(),
-                    *self.vertices.get_by_right(vertex3).unwrap(),
-                ],
-            },
-        );
-
-        self.edges.insert(
-            edge_ids[2],
-            Edge {
-                vertex_ids: [
-                    *self.vertices.get_by_right(vertex3).unwrap(),
-                    *self.vertices.get_by_right(vertex1).unwrap(),
-                ],
-            },
-        );
-
-        self.triangle_from_edges(
-            self.edges.get_by_left(&edge_ids[0]).unwrap(),
-            self.edges.get_by_left(&edge_ids[0]).unwrap(),
-            self.edges.get_by_left(&edge_ids[0]).unwrap(),
-        )
-    }
-
-    pub fn triangle_from_edges(&self, edge1: &Edge, edge2: &Edge, edge3: &Edge) -> Triangle
-    {
-        Triangle {
-            edges: [
-                *self.edges.get_by_right(edge1).unwrap(),
-                *self.edges.get_by_right(edge2).unwrap(),
-                *self.edges.get_by_right(edge3).unwrap(),
-            ],
-        }
+        self.triangles.push(Triangle {
+            vertices: [vertex1, vertex2, vertex3],
+            edges: new_edges,
+        });
+        self.triangles.len() - 1
     }
 }
 
@@ -115,19 +118,10 @@ impl<T> PartialEq for Vertex<T>
 }
 impl<T> Eq for Vertex<T> {}
 
-impl<T> std::hash::Hash for Vertex<T>
-{
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
-    {
-        let address = format!("{:p}", &self);
-        address.hash(state); // Hash the address instead of the contents
-    }
-}
-
 #[derive(Debug)]
 pub struct Edge
 {
-    vertex_ids: [uuid::Uuid; 2],
+    vertices: [usize; 2],
 }
 impl PartialEq for Edge
 {
@@ -138,19 +132,11 @@ impl PartialEq for Edge
 }
 impl Eq for Edge {}
 
-impl std::hash::Hash for Edge
-{
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
-    {
-        let address = format!("{:p}", &self);
-        address.hash(state); // Hash the address instead of the contents
-    }
-}
-
 #[derive(Debug)]
 pub struct Triangle
 {
-    edges: [uuid::Uuid; 3],
+    vertices: [usize; 3],
+    edges: [usize; 3],
 }
 impl PartialEq for Triangle
 {
@@ -161,19 +147,10 @@ impl PartialEq for Triangle
 }
 impl Eq for Triangle {}
 
-impl std::hash::Hash for Triangle
-{
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
-    {
-        let address = format!("{:p}", &self);
-        address.hash(state); // Hash the address instead of the contents
-    }
-}
-
 #[derive(Debug)]
 pub struct Tetrahedron
 {
-    faces: [uuid::Uuid; 4],
+    vertices: [usize; 4],
 }
 impl PartialEq for Tetrahedron
 {
@@ -183,15 +160,6 @@ impl PartialEq for Tetrahedron
     }
 }
 impl Eq for Tetrahedron {}
-
-impl std::hash::Hash for Tetrahedron
-{
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H)
-    {
-        let address = format!("{:p}", &self);
-        address.hash(state); // Hash the address instead of the contents
-    }
-}
 
 #[test]
 fn check_join()
@@ -205,7 +173,7 @@ fn check_join()
         position: std::vec![2., 3.],
     });
 
-    test_mesh.join_vertices(v1_id, v2_id);
+    test_mesh.edge_from_vertices(v1_id, v2_id);
 
     println!("Checking mesh state {:?}", test_mesh);
     //assert_eq!(test_edge1, test_edge2);
